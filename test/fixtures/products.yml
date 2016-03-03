@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  unit_price: 1.5
+  weight: MyString
+  picture: MyString
+  description: MyText
+  conservation: MyText
+
+two:
+  title: MyString
+  unit_price: 1.5
+  weight: MyString
+  picture: MyString
+  description: MyText
+  conservation: MyText

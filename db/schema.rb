@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160301211304) do
+ActiveRecord::Schema.define(version: 20160303180811) do
 
   create_table "categories", force: :cascade do |t|
     t.string   "name"
@@ -21,6 +21,20 @@ ActiveRecord::Schema.define(version: 20160301211304) do
   end
 
   add_index "categories", ["website_id"], name: "index_categories_on_website_id"
+
+  create_table "products", force: :cascade do |t|
+    t.string   "title",         default: ""
+    t.float    "unit_price",    default: 0.0
+    t.string   "weight",        default: ""
+    t.string   "picture",       default: ""
+    t.text     "description",   default: ""
+    t.text     "conservation",  default: ""
+    t.integer  "subsection_id"
+    t.datetime "created_at",                  null: false
+    t.datetime "updated_at",                  null: false
+  end
+
+  add_index "products", ["subsection_id"], name: "index_products_on_subsection_id"
 
   create_table "sections", force: :cascade do |t|
     t.string   "name"
