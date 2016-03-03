@@ -1,3 +1,4 @@
+MONOPRIX_BASE_URL = "https://www.monoprix.fr"
 namespace :monoprix do
   desc "Get products from monoprix.fr"
   task :scrapper => :environment do
@@ -6,85 +7,109 @@ namespace :monoprix do
     require 'json'
 
     # We can also pass this URL via a task argument
-    BASE_URL = "https://www.monoprix.fr/beurre-doux-extra-fin-monoprix-1816533-p"
+    BASE_URL = ""
 
     Category.includes(sections: [:subsections]).all.each do |category|
+
       puts "Category: #{category.name}:"
+
       category.sections.each do |section|
+
         puts "\tSection: #{section.name}"
+
         section.subsections.each do |subsection|
-          puts "\t\tSubsection: #{subsection.name} [#{subsection.href[0..40]}]"
-        end
-      end
-    end
 
+          subsection_page     = Nokogiri::HTML(RestClient.get(subsection.href))
+          subsection_page_max = (subsection_page.css(".pagination li:nth-last-child(2) a").text.presence || "1").to_i
 
-    page = Nokogiri::HTML(RestClient.get("https://www.monoprix.fr/cave-0000552"))
+          puts "\t\tSubsection: #{subsection.name}(#{subsection_page_max}): #{subsection.href[0..40]}"
 
-    puts page.css(".pagination li:nth-last-child(2) a").text
+          if subsection_page_max == 1
+            monoprix_products_by_subsection_page(subsection_page, subsection, 1)
+          else
+            monoprix_products_by_subsection_page(subsection_page, subsection, 1) # avoid computation
+            2.upto(subsection_page_max) do |page_number|
+              subsection_page = Nokogiri::HTML(RestClient.get("#{subsection.href}/page-#{page_number}")) # monoprix/test/page-2
+              monoprix_products_by_subsection_page(subsection_page, subsection, page_number)
+            end
+          end
 
-    # products = []
-    # product_count = 0  
-    # 1.upto(1) do |page_number|
+        end # subsections
 
-    #   product = Hash.new { |hash, key| hash[key] = {} }
+      end # sections
 
-    #   url = "#{BASE_URL}"
+    end # categories
 
-    #   product_page = Nokogiri::HTML(RestClient.get(url))
-
-    #   # Scrapping product's information
-    #   product[:title]        = product_page.css("aside h3").text.squish
-    #   product[:unit_price]   = product_page.css("#priceChange").text.gsub(/,/, ".").to_f
-    #   product[:weight]       = product_page.css("aside h4").children.first.to_s.squish
-    #   product[:picture]      = product_page.css(".center img").first.attributes["src"].to_s.squish
-    #   product[:description]  = product_page.css("#desc").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.join("\n").squish
-    #   product[:conservation] = product_page.css("#conservation").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.join("\n").squish
-    #   ingredients            = product_page.css("#ingredients").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
-    #   nutritional_values     = product_page.css("#valeur").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
-
-    #   ##############
-    #   # ingredients
-    #   ##############
-
-    #   product[:ingredients][:ingredients] = ingredients.shift
-
-    #   additional_information = ingredients.each_slice(2).to_a.map do |a|
-    #     {
-    #       name: a[0].gsub(/(<u>)|(<\/u>)/, "<u>" => "", "</u>" => ""), # remove <u></u> around the text
-    #       info: a[1]
-    #     }
-    #   end
-
-    #   product[:ingredients][:additional_information] = {
-    #     additional_information: additional_information
-    #   }.to_json
-
-    #   #####################
-    #   # nutritional values
-    #   #####################
-
-    #   # product[:nutritional_values][:information]  = nutritional_values.shift
-
-    #   # additional_information = nutritional_values.each_slice(2).to_a.map do |a|
-    #   #   {
-    #   #     name: a[0].gsub(/(<u>)|(<\/u>)/, "<u>" => "", "</u>" => ""), # remove <u></u> around the text
-    #   #     info: a[1]
-    #   #   }
-    #   # end
-
-    #   # product[:ingredients][:additional_information] = {
-    #   #   additional_information: additional_information
-    #   # }.to_json
-
-
-    #   # product.each { |k, v| puts v;puts }
-
-    #   # product_count += 1
-    #   # print("\rMONOPRIX: scrapped product for category 'Produits Frais' : #{product_count}")
-    #   products << product
-
-    # end
-    # puts
+    
   end
+end
+
+def monoprix_products_by_subsection_page(subsection_page, subsection, page_number)
+  products = []
+
+  subsection_page.css(".item_produits_courses li > a").map { |p| p.first.last }.each do |product_link|
+    product_page  = Nokogiri::HTML(RestClient.get("#{MONOPRIX_BASE_URL}#{product_link}"))
+    
+    products << monoprix_get_product(product_page)
+  end
+  
+end
+
+def monoprix_get_product(product_page)
+    # product = Hash.new { |hash, key| hash[key] = {} }
+
+    # url = "#{BASE_URL}"
+
+    # product_page = Nokogiri::HTML(RestClient.get(url))
+
+    # # Scrapping product's information
+    # product[:title]        = product_page.css("aside h3").text.squish
+    # product[:unit_price]   = product_page.css("#priceChange").text.gsub(/,/, ".").to_f
+    # product[:weight]       = product_page.css("aside h4").children.first.to_s.squish
+    # product[:picture]      = product_page.css(".center img").first.attributes["src"].to_s.squish
+    # product[:description]  = product_page.css("#desc").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.join("\n").squish
+    # product[:conservation] = product_page.css("#conservation").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.join("\n").squish
+    # ingredients            = product_page.css("#ingredients").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
+    # nutritional_values     = product_page.css("#valeur").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
+
+    # ##############
+    # # ingredients
+    # ##############
+
+    # product[:ingredients][:ingredients] = ingredients.shift
+
+    # additional_information = ingredients.each_slice(2).to_a.map do |a|
+    #   {
+    #     name: a[0].gsub(/(<u>)|(<\/u>)/, "<u>" => "", "</u>" => ""), # remove <u></u> around the text
+    #     info: a[1]
+    #   }
+    # end
+
+    # product[:ingredients][:additional_information] = {
+    #   additional_information: additional_information
+    # }.to_json
+
+    # #####################
+    # # nutritional values
+    # #####################
+
+    # # product[:nutritional_values][:information]  = nutritional_values.shift
+
+    # # additional_information = nutritional_values.each_slice(2).to_a.map do |a|
+    # #   {
+    # #     name: a[0].gsub(/(<u>)|(<\/u>)/, "<u>" => "", "</u>" => ""), # remove <u></u> around the text
+    # #     info: a[1]
+    # #   }
+    # # end
+
+    # # product[:ingredients][:additional_information] = {
+    # #   additional_information: additional_information
+    # # }.to_json
+
+
+    # # product.each { |k, v| puts v;puts }
+
+    # # product_count += 1
+    # # print("\rMONOPRIX: scrapped product for category 'Produits Frais' : #{product_count}")
+    # products << product
 end
