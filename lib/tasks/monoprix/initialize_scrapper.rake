@@ -27,7 +27,7 @@ namespace :monoprix do
         puts "\t #{section.name}"
         subsections = page.css(".dropdown:nth-child(#{index + 2}) .submenu-links:nth-child(#{sub_index + 1}) li a")
         subsections.each do | html_subsection |
-          subsection = Subsection.create(name: html_subsection.text.squish, href: "#{BASE_URL}#{html_subsection[:href]}")
+          subsection = Subsection.create(name: html_subsection.text.squish, href: "#{BASE_URL}#{html_subsection[:href].split(";")[0]}")
           section.subsections << subsection
           puts "\t\t #{subsection.name} href #{subsection.href}"
         end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160303180811) do
+ActiveRecord::Schema.define(version: 20160303200755) do
 
   create_table "categories", force: :cascade do |t|
     t.string   "name"
@@ -21,6 +21,27 @@ ActiveRecord::Schema.define(version: 20160303180811) do
   end
 
   add_index "categories", ["website_id"], name: "index_categories_on_website_id"
+
+  create_table "ingredients", force: :cascade do |t|
+    t.text     "ingredients",            default: ""
+    t.text     "additional_information", default: ""
+    t.integer  "product_id"
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
+  end
+
+  add_index "ingredients", ["product_id"], name: "index_ingredients_on_product_id"
+
+  create_table "nutritional_values", force: :cascade do |t|
+    t.text     "information",            default: ""
+    t.text     "energy_value",           default: ""
+    t.text     "additional_information", default: ""
+    t.integer  "product_id"
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
+  end
+
+  add_index "nutritional_values", ["product_id"], name: "index_nutritional_values_on_product_id"
 
   create_table "products", force: :cascade do |t|
     t.string   "title",         default: ""
