@@ -1,0 +1,3 @@
+<% @sections.each do |section|  %>
+  <%= link_to section.name, sections_index_path(id: section.id)   %>
+<% end %>

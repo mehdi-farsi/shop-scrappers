@@ -1,0 +1,3 @@
+<% @websites.each do |website|  %>
+  <%= link_to website.name, websites_index_path(id: website.id)   %>
+<% end %>
