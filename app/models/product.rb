@@ -1,6 +1,6 @@
 class Product < ActiveRecord::Base
-  has_many   :ingredients,        dependent: :destroy
-  has_many   :nutritional_values, dependent: :destroy
+  has_one   :ingredient,        dependent: :destroy
+  has_one   :nutritional_value, dependent: :destroy
 
   belongs_to :subsection
 end

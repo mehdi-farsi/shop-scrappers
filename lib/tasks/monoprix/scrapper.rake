@@ -55,14 +55,14 @@ def monoprix_products_by_subsection_page(subsection_page, subsection, page_numbe
   subsection_page.css(".item_produits_courses li > a").map { |p| p.first.last }.each do |product_link|
     product_page  = Nokogiri::HTML(RestClient.get("#{MONOPRIX_BASE_URL}#{product_link}"))
     
-    products << monoprix_get_product(product_page)
+    products <<  monoprix_get_product(product_page)
   end
 
   products.each do |product|
-    product = subsection.products.create(product.reject { |k, v| product.include?(:ingredient) || product.include?(:nutritional_values) })
+    p = subsection.products.create(product.select { |k, v| ![:ingredients, :nutritional_values].include?(k) })
 
-    product.ingredients.create(product[:ingredients])
-    product.nutritional_values.create(product[:nutritional_values])
+    Ingredient.create!(product[:ingredients].merge(product_id: p.id))
+    NutritionalValue.create!(product[:nutritional_values].merge(product_id: p.id))
   end
 
   puts "\t\t\t#{products.size} products inserted in subsection #{subsection.name} [page #{page_number}]"
@@ -101,7 +101,7 @@ def monoprix_get_product(product_page)
     # nutritional values
     #####################
 
-    product[:nutritional_values][:information]  = product_page.css("#valeur h4")
+    product[:nutritional_values][:information]  = product_page.css("#valeur h4").text.squish
 
     nutritional_values = product_page.css("#valeur td").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
 
@@ -112,11 +112,9 @@ def monoprix_get_product(product_page)
           value: e[1]
         }
       end
-    }
+    }.to_json
 
     product[:nutritional_values][:energy_value] = energy_value
-
-
 
     additional_information = {
       additional_information: nutritional_values[4..-1].each_slice(2).map do |e|
@@ -125,7 +123,7 @@ def monoprix_get_product(product_page)
           value: e[1]
         }
       end
-    } if nutritional_values.size > 4
+    }.to_json if nutritional_values.size > 4
 
     product[:nutritional_values][:additional_information] = additional_information
 

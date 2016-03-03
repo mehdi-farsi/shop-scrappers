@@ -1,6 +1,6 @@
 <h1>List of products for subsection "<%= @subsection.name   %>"  </h1>
 
-<table>
+<table id="product-table">
   <thead>
     <tr>
       <th> title  </th>
@@ -9,21 +9,31 @@
       <th> picture </th>
       <th> description</th>
       <th> conservation</th>
-      <th> ingerdients  </th>
+      <th> ingredients  </th>
       <th> nutritional values</th>
     </tr>
   </thead>
   <% @subsection.products.each do |product|   %>
      <tr>
-       <td><%= product.title %> </td>
-       <td><%= product.unit price %> </td>
-       <td><%= product.weight %> </td>
-       <td><%= product.picture %></td>
-       <td><%= product.description %></td>
-       <td><%= product.conservation %></td>
-       <td><%= product.ingerdients %> </td>
-       <td><%= product.nutritional values %>  </td>
+      <td><%= product.title %> </td>
+      <td><%= product.unit_price %> €</td>
+      <td><%= product.weight %> </td>
+      <td><%= image_tag product.picture, size: "100x100" %></td>
+      <td><%= product.description %></td>
+      <td><%= product.conservation %></td>
+      <td>
+       <%= product.ingredient.ingredients %>
+      </td>
+      <td>
+        <%= product.nutritional_value.information %>
+      </td>
     </tr>
    <p></p>
   <% end %>
 </table>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#product-table').DataTable();
+} );
+</script>
