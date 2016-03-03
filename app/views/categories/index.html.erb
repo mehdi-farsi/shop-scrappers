@@ -1,3 +1,4 @@
-<% @sections.each do |section|  %>
+<h1> List of section for category "<%= @category.name   %>"   </h1>
+<% @category.sections.each do |section|  %>
   <%= link_to section.name, sections_index_path(id: section.id)   %>
 <% end %>

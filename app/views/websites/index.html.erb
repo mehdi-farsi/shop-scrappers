@@ -1,3 +1,5 @@
-<% @categories.each do |category|  %>
+<h1> List of category for website "<%= @website.name  %>"  </h1>
+
+<% @website.categories.each do |category|  %>
   <%= link_to category.name, categories_index_path(id: category.id)   %>
 <% end %>

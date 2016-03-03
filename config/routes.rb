@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'products/index'
+
   get 'websites/index'
 
   get 'subsections/index'

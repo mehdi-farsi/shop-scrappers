@@ -1,5 +1,5 @@
 class WebsitesController < ApplicationController
   def index
-    @categories = Website.find(params[:id]).categories
+    @website = Website.find(params[:id])
   end
 end

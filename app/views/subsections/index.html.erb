@@ -1,2 +1,29 @@
-<h1>Subsections#index</h1>
-<p>Find me in app/views/subsections/index.html.erb</p>
+<h1>List of products for subsection "<%= @subsection.name   %>"  </h1>
+
+<table>
+  <thead>
+    <tr>
+      <th> title  </th>
+      <th> unit price </th>
+      <th> weight </th>
+      <th> picture </th>
+      <th> description</th>
+      <th> conservation</th>
+      <th> ingerdients  </th>
+      <th> nutritional values</th>
+    </tr>
+  </thead>
+  <% @subsection.products.each do |product|   %>
+     <tr>
+       <td><%= product.title %> </td>
+       <td><%= product.unit price %> </td>
+       <td><%= product.weight %> </td>
+       <td><%= product.picture %></td>
+       <td><%= product.description %></td>
+       <td><%= product.conservation %></td>
+       <td><%= product.ingerdients %> </td>
+       <td><%= product.nutritional values %>  </td>
+    </tr>
+   <p></p>
+  <% end %>
+</table>

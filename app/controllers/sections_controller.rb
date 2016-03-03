@@ -1,5 +1,5 @@
 class SectionsController < ApplicationController
   def index
-    @subsections = Section.find(params[:id]).subsections
+    @section = Section.find(params[:id])
   end
 end
