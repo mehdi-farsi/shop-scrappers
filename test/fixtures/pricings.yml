@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  unit_price: MyString
+  price_per_kilo: MyString
+  extracted_at: 2016-03-12 10:13:48
+  product_id: 
+
+two:
+  unit_price: MyString
+  price_per_kilo: MyString
+  extracted_at: 2016-03-12 10:13:48
+  product_id: 
