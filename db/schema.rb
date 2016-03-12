@@ -25,6 +25,7 @@ ActiveRecord::Schema.define(version: 20160312191526) do
   create_table "energy_values", force: :cascade do |t|
     t.string   "name",                 limit: 255
     t.string   "weight",               limit: 255
+    t.string   "unit",                 limit: 255
     t.integer  "nutritional_value_id", limit: 4
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false
@@ -54,6 +55,7 @@ ActiveRecord::Schema.define(version: 20160312191526) do
   create_table "nutrition_types", force: :cascade do |t|
     t.string   "name",                 limit: 255
     t.string   "weight",               limit: 255
+    t.string   "unit",                 limit: 255
     t.integer  "nutritional_value_id", limit: 4
     t.datetime "created_at",                       null: false
     t.datetime "updated_at",                       null: false

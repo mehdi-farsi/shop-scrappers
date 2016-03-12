@@ -144,12 +144,17 @@ def monoprix_get_product(product_page, page_url)
     # energy values
     ################
 
-    weight_extraction_regex = /([\d,]+ [a-zA-Z]+) /
+    weight_extraction_regex = /([\d,]+) ([a-zA-Zµ]+) /
 
     product[:energy_values] = nutritional_values[0..3].each_slice(2).map do |e|
+      weight_data_raw = e[1].match(weight_extraction_regex)
+      weight          = weight_data_raw.nil? ? nil : weight_data_raw[1].gsub(/,/, ".")
+      unit            = weight_data_raw.nil? ? nil : weight_data_raw[2]
+      
       {
         name:   e[0],
-        weight: e[1].match(weight_extraction_regex).try(:[], 1) # Example: match with "1876 KJ"
+        weight: weight, # Example: match with "1876"
+        unit:   unit    # Example: match with "KJ"
       }
     end
 
@@ -158,9 +163,14 @@ def monoprix_get_product(product_page, page_url)
     #################
 
     product[:nutrition_types] = nutritional_values[4..-1].each_slice(2).map do |e|
+      weight_data_raw = e[1].match(weight_extraction_regex)
+      weight          = weight_data_raw.nil? ? nil : weight_data_raw[1].gsub(/,/, ".")
+      unit            = weight_data_raw.nil? ? nil : weight_data_raw[2]
+      
       {
         name:   e[0],
-        weight:   e[1].match(weight_extraction_regex).try(:[], 1) # Example: match with "1876 KJ"
+        weight: weight, # Example: match with "51"
+        unit:   unit    # Example: match with "g"
       }
     end if nutritional_values.size > 4
 
