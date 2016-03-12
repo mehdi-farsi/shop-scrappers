@@ -60,14 +60,21 @@ def monoprix_products_by_subsection_page(subsection_page, subsection, page_numbe
   end
 
   products.each do |product|
-    excluded_keys_for_product = [:ingredients, :nutritional_values, :weight, :pricing, :ingredient_types]
+    excluded_keys_for_product = [:ingredients, :nutritional_values, :weight, :pricing, :ingredient_types, :energy_values, :nutrition_types]
 
     p = subsection.products.create(product.select { |k, v| !excluded_keys_for_product.include?(k) })
 
-    NutritionalValue.create!(product[:nutritional_values].merge(product_id: p.id))
+    # => Weight + Pricing
     Weight.create!(product[:weight].merge(product_id: p.id)) unless product[:weight].empty?
     Pricing.create!(product[:pricing].merge(product_id: p.id, extracted_at: Time.now))
 
+    # => NutritionalValue + EnergyValue
+    nutritional_value = NutritionalValue.create!(product[:nutritional_values].merge(product_id: p.id))
+
+    product[:energy_values].each   { |ev| EnergyValue.create!(ev.merge(nutritional_value_id:   nutritional_value.id)) }
+    product[:nutrition_types].each { |nt| NutritionType.create!(nt.merge(nutritional_value_id: nutritional_value.id)) }
+
+    # => Ingredient + IngredientType
     ingredient = Ingredient.create!(product[:ingredients].merge(product_id: p.id))
 
     product[:ingredient_types].each { |it| IngredientType.create!(it.merge(ingredient_id: ingredient.id)) }
@@ -117,14 +124,12 @@ def monoprix_get_product(product_page, page_url)
 
     product[:ingredients][:ingredients] = ingredients.shift
 
-    additional_information = ingredients.each_slice(2).to_a.map do |a|
+    product[:ingredient_types] = ingredients.each_slice(2).to_a.map do |a|
       {
         name: a[0].gsub(/(<u>)|(<\/u>)/, "<u>" => "", "</u>" => ""), # remove <u></u> around the text
         info: a[1]
       }
     end
-
-    product[:ingredient_types] = additional_information
 
     #####################
     # nutritional values
@@ -134,27 +139,30 @@ def monoprix_get_product(product_page, page_url)
 
     nutritional_values = product_page.css("#valeur td").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
 
-    energy_value = {
-      energy_value: nutritional_values[0..3].each_slice(2).map do |e|
-        {
-          name:  e[0],
-          value: e[1]
-        }
-      end
-    }.to_json
 
-    product[:nutritional_values][:energy_value] = energy_value
+    ################
+    # energy values
+    ################
 
-    additional_information = {
-      additional_information: nutritional_values[4..-1].each_slice(2).map do |e|
-        {
-          name:  e[0],
-          value: e[1]
-        }
-      end
-    }.to_json if nutritional_values.size > 4
+    weight_extraction_regex = /([\d,]+ [a-zA-Z]+) /
 
-    product[:nutritional_values][:additional_information] = additional_information
+    product[:energy_values] = nutritional_values[0..3].each_slice(2).map do |e|
+      {
+        name:   e[0],
+        weight: e[1].match(weight_extraction_regex).try(:[], 1) # Example: match with "1876 KJ"
+      }
+    end
+
+    #################
+    # Nutrition type
+    #################
+
+    product[:nutrition_types] = nutritional_values[4..-1].each_slice(2).map do |e|
+      {
+        name:   e[0],
+        weight:   e[1].match(weight_extraction_regex).try(:[], 1) # Example: match with "1876 KJ"
+      }
+    end if nutritional_values.size > 4
 
     product
 end
