@@ -60,12 +60,17 @@ def monoprix_products_by_subsection_page(subsection_page, subsection, page_numbe
   end
 
   products.each do |product|
-    p = subsection.products.create(product.select { |k, v| ![:ingredients, :nutritional_values, :weight, :pricing].include?(k) })
+    excluded_keys_for_product = [:ingredients, :nutritional_values, :weight, :pricing, :ingredient_types]
 
-    Ingredient.create!(product[:ingredients].merge(product_id: p.id))
+    p = subsection.products.create(product.select { |k, v| !excluded_keys_for_product.include?(k) })
+
     NutritionalValue.create!(product[:nutritional_values].merge(product_id: p.id))
     Weight.create!(product[:weight].merge(product_id: p.id)) unless product[:weight].empty?
     Pricing.create!(product[:pricing].merge(product_id: p.id, extracted_at: Time.now))
+
+    ingredient = Ingredient.create!(product[:ingredients].merge(product_id: p.id))
+
+    product[:ingredient_types].each { |it| IngredientType.create!(it.merge(ingredient_id: ingredient.id)) }
   end
 
   puts "\t\t\t#{products.size} products inserted in subsection #{subsection.name} [page #{page_number}]"
@@ -119,9 +124,7 @@ def monoprix_get_product(product_page, page_url)
       }
     end
 
-    product[:ingredients][:additional_information] = {
-      additional_information: additional_information
-    }.to_json
+    product[:ingredient_types] = additional_information
 
     #####################
     # nutritional values

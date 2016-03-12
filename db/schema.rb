@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160312091348) do
+ActiveRecord::Schema.define(version: 20160312172820) do
 
   create_table "categories", force: :cascade do |t|
     t.string   "name",       limit: 255
@@ -21,6 +21,16 @@ ActiveRecord::Schema.define(version: 20160312091348) do
   end
 
   add_index "categories", ["website_id"], name: "index_categories_on_website_id", using: :btree
+
+  create_table "ingredient_types", force: :cascade do |t|
+    t.string   "name",          limit: 255
+    t.string   "info",          limit: 255
+    t.integer  "ingredient_id", limit: 4
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+  end
+
+  add_index "ingredient_types", ["ingredient_id"], name: "index_ingredient_types_on_ingredient_id", using: :btree
 
   create_table "ingredients", force: :cascade do |t|
     t.text     "ingredients",            limit: 65535
@@ -105,6 +115,7 @@ ActiveRecord::Schema.define(version: 20160312091348) do
   add_index "weights", ["product_id"], name: "index_weights_on_product_id", using: :btree
 
   add_foreign_key "categories", "websites"
+  add_foreign_key "ingredient_types", "ingredients"
   add_foreign_key "ingredients", "products"
   add_foreign_key "nutritional_values", "products"
   add_foreign_key "pricings", "products"
