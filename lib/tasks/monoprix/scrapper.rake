@@ -163,7 +163,7 @@ def monoprix_get_product(product_page, page_url)
     #################
 
     product[:nutrition_types] = nutritional_values[4..-1].each_slice(2).map do |e|
-      weight_data_raw = e[1].match(weight_extraction_regex)
+      weight_data_raw = e[1].try(:match, weight_extraction_regex)
       weight          = weight_data_raw.nil? ? nil : weight_data_raw[1].gsub(/,/, ".")
       unit            = weight_data_raw.nil? ? nil : weight_data_raw[2]
       

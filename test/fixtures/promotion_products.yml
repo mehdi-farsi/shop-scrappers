@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  url: MyString
+  description_offer: MyText
+  information_offer: MyText
+  promotion_id: 
+
+two:
+  url: MyString
+  description_offer: MyText
+  information_offer: MyText
+  promotion_id: 

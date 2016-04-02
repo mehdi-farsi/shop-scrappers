@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160312191526) do
+ActiveRecord::Schema.define(version: 20160316153029) do
 
   create_table "categories", force: :cascade do |t|
     t.string   "name",       limit: 255
@@ -34,7 +34,7 @@ ActiveRecord::Schema.define(version: 20160312191526) do
   add_index "energy_values", ["nutritional_value_id"], name: "index_energy_values_on_nutritional_value_id", using: :btree
 
   create_table "ingredient_types", force: :cascade do |t|
-    t.string   "name",          limit: 255
+    t.text     "name",          limit: 65535
     t.text     "info",          limit: 65535
     t.integer  "ingredient_id", limit: 4
     t.datetime "created_at",                  null: false
@@ -53,12 +53,12 @@ ActiveRecord::Schema.define(version: 20160312191526) do
   add_index "ingredients", ["product_id"], name: "index_ingredients_on_product_id", using: :btree
 
   create_table "nutrition_types", force: :cascade do |t|
-    t.string   "name",                 limit: 255
+    t.text     "name",                 limit: 65535
     t.string   "weight",               limit: 255
     t.string   "unit",                 limit: 255
     t.integer  "nutritional_value_id", limit: 4
-    t.datetime "created_at",                       null: false
-    t.datetime "updated_at",                       null: false
+    t.datetime "created_at",                         null: false
+    t.datetime "updated_at",                         null: false
   end
 
   add_index "nutrition_types", ["nutritional_value_id"], name: "index_nutrition_types_on_nutritional_value_id", using: :btree
@@ -97,6 +97,24 @@ ActiveRecord::Schema.define(version: 20160312191526) do
   end
 
   add_index "products", ["subsection_id"], name: "index_products_on_subsection_id", using: :btree
+
+  create_table "promotion_products", force: :cascade do |t|
+    t.string   "name",              limit: 255
+    t.string   "url",               limit: 255
+    t.text     "description_offer", limit: 65535
+    t.text     "information_offer", limit: 65535
+    t.boolean  "card_offer"
+    t.integer  "promotion_id",      limit: 4
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+  end
+
+  add_index "promotion_products", ["promotion_id"], name: "index_promotion_products_on_promotion_id", using: :btree
+
+  create_table "promotions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "sections", force: :cascade do |t|
     t.string   "name",        limit: 255
@@ -141,6 +159,7 @@ ActiveRecord::Schema.define(version: 20160312191526) do
   add_foreign_key "nutritional_values", "products"
   add_foreign_key "pricings", "products"
   add_foreign_key "products", "subsections"
+  add_foreign_key "promotion_products", "promotions"
   add_foreign_key "sections", "categories"
   add_foreign_key "subsections", "sections"
   add_foreign_key "weights", "products"
