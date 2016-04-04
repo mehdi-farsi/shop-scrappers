@@ -12,8 +12,10 @@ namespace :monoprix do
     # We can also pass this URL via a task argument
     BASE_URL = "https://www.monoprix.fr"
 
-    promotion = if Promotion.count == 0
-      Promotion.create
+    website = Website.where(name: "Monoprix").first
+
+    promotion = if website.promotion.nil?
+      Promotion.create(website_id: website.id)
     else
       Promotion.first
     end
