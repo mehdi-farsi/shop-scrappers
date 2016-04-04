@@ -12,7 +12,9 @@ namespace :monoprix do
 
     category = (ENV["CATEGORY"] || "0").to_i
 
-    Category.includes(sections: [:subsections]).limit(1).offset(category).each do |category|
+    website = Website.where(name: "Monoprix").first
+
+    website.categories.includes(sections: [:subsections]).limit(1).offset(category).each do |category|
 
       puts "Category: #{category.name}:"
 
@@ -99,6 +101,10 @@ def monoprix_get_product(product_page, page_url)
     product[:conservation]      = product_page.css("#conservation").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.join("\n").squish
     ingredients                 = product_page.css("#ingredients").children.map { |d| d.to_s.gsub(/<br>/, "").squish }.reject { |i| i.blank? }
 
+
+    /(?:tc_vars\["product_ean"\]) = "(?<ean_code>[\d]+)"/ =~ product_page.css("script").children.first.to_s.squish
+    product[:ean] = ean_code
+      
 
     #########
     # weight

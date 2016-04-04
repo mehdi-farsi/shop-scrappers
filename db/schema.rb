@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160316153029) do
+ActiveRecord::Schema.define(version: 20160402184515) do
 
   create_table "categories", force: :cascade do |t|
     t.string   "name",       limit: 255
@@ -94,6 +94,7 @@ ActiveRecord::Schema.define(version: 20160316153029) do
     t.string   "brand",             limit: 255
     t.string   "url",               limit: 255
     t.string   "conservation_type", limit: 255
+    t.string   "ean",               limit: 255
   end
 
   add_index "products", ["subsection_id"], name: "index_products_on_subsection_id", using: :btree
@@ -124,6 +125,25 @@ ActiveRecord::Schema.define(version: 20160316153029) do
   end
 
   add_index "sections", ["category_id"], name: "index_sections_on_category_id", using: :btree
+
+  create_table "shops", force: :cascade do |t|
+    t.string   "name",       limit: 255
+    t.text     "address",    limit: 65535
+    t.float    "lat",        limit: 24
+    t.float    "lng",        limit: 24
+    t.string   "monday",     limit: 255
+    t.string   "tuesday",    limit: 255
+    t.string   "wednesday",  limit: 255
+    t.string   "thursday",   limit: 255
+    t.string   "friday",     limit: 255
+    t.string   "saturday",   limit: 255
+    t.string   "sunday",     limit: 255
+    t.integer  "website_id", limit: 4
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
+  end
+
+  add_index "shops", ["website_id"], name: "index_shops_on_website_id", using: :btree
 
   create_table "subsections", force: :cascade do |t|
     t.string   "name",       limit: 255
@@ -161,6 +181,7 @@ ActiveRecord::Schema.define(version: 20160316153029) do
   add_foreign_key "products", "subsections"
   add_foreign_key "promotion_products", "promotions"
   add_foreign_key "sections", "categories"
+  add_foreign_key "shops", "websites"
   add_foreign_key "subsections", "sections"
   add_foreign_key "weights", "products"
 end
