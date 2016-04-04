@@ -1,4 +1,4 @@
-namespace :monoprix do
+namespace :naturalia do
   desc "Get Promotion from monoprix.fr"
   task :promotions => :environment do
     require 'nokogiri'
@@ -10,22 +10,20 @@ namespace :monoprix do
     #################
 
     # We can also pass this URL via a task argument
-    BASE_URL = "https://www.monoprix.fr"
+    BASE_URL = "http://www.naturalia.fr"
 
-    promotion = if Promotion.count == 0
-      Promotion.create
+    website = Website.where(name: "Naturalia").first
+
+    promotion = if website.promotion.nil?
+      Promotion.create(website_id: website.id)
     else
       Promotion.first
     end
 
     page_number = 1 # add 48 to go to the next page
 
-    url = "#{BASE_URL}/promotions?N=4294964086+4294964085+4294966807+4294964025+4294964084+4294964022+4294964021+4294964915+4294964912+4294959686+4294964914+4294960171+4294966805&showProduct=true"
-
-    page = Nokogiri::HTML(RestClient.get("#{url}&No=#{page_number}"))
-
-    promotion_product_count = page.css("#rightContent strong").text.squish.to_i
-    max_page = (page.css("#rightContent strong").text.squish.to_f / 48.0).ceil
+    promotions_url = "#{BASE_URL}/promotions"
+    page = Nokogiri::HTML(RestClient.get(promotions_url))
 
 
     #############
@@ -38,38 +36,41 @@ namespace :monoprix do
 
     promotion_products = []
 
-    1.upto(max_page) do |n|
+    promotion_product_links = page.css(".acceder").select # Select all links
 
-      page_number = if n == 1
-        1
-      else
-        1 + ((n - 1) * 48)
+
+    promotion_product_links.each_with_index do |promotion_link, index|
+      promotion_url = "#{BASE_URL}#{promotion_link[:href]}"
+
+      redirection = false
+
+      response = RestClient.get(promotion_url) do |response, request, result, &block|
+        if [301, 302, 307].include? response.code
+          redirection = true
+          response.follow_redirection(request, result, &block)
+        else
+          response.return!(request, result, &block)
+        end
       end
 
-      page = Nokogiri::HTML(RestClient.get("#{url}&No=#{page_number}"))
-      promotion_links = page.css("#rightContent .item_produits_courses li > a").select # Select all links
+      puts "#{promotion_url} is no longer available" if redirection
+      next if redirection
 
-      puts "Page #{n}"
+      promotion_page = Nokogiri::HTML(response)
 
-      promotion_links.each_with_index do |promotion_link, index|
-        promotion_url = "#{BASE_URL}#{promotion_link[:href]}"
+      promotion_product = {}
 
-        promotion_page = Nokogiri::HTML(RestClient.get(promotion_url))
+      normal_price   = promotion_page.css(".prixnormal").children.first.to_s.gsub(',', '.').to_f
+      discount_price = promotion_page.css(".prixpromo").children.first.to_s.gsub(',', '.').to_f
 
-        promotion_product = {}
+      promotion_product[:url]               = promotion_url
+      promotion_product[:name]              = promotion_page.css(".titreProduit h4").text.squish
+      promotion_product[:description_offer] = "Réduction"
+      promotion_product[:information_offer] = "#{discount_price}€ au lieu de #{normal_price}€"
 
-        card_offer = promotion_page.css(".tag-promo").select.first[:class].to_s.match(/carte/).nil? ? false : true
-
-        promotion_product[:url]               = promotion_url
-        promotion_product[:name]              = promotion_page.css("aside h3").text.squish
-        promotion_product[:description_offer] = promotion_page.css(".tag-promo").text.squish
-        promotion_product[:information_offer] = promotion_page.css("#priceValidUntil").text.squish
-        promotion_product[:card_offer]        = card_offer
-
-        promotion_products << promotion_product
-        puts "\tPromotion: #{promotion_product[:name]}"
-      end
-    end;puts
+      promotion_products << promotion_product
+      puts "Promotion: #{promotion_product[:name]}"
+    end; puts
 
     promotion_product_count = promotion_products.size
 
