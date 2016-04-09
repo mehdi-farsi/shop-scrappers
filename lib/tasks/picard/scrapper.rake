@@ -66,28 +66,31 @@ def picard_products_by_subsection_page(subsection_page, subsection)
     products <<  picard_get_product(product_page, page_url, product_image)
   end
 
-  # products.each do |product|
-  #  excluded_keys_for_product = [:ingredients, :nutritional_values, :weight, :pricing, :ingredient_types, :energy_values, :nutrition_types]
+  products.each do |product|
+   if subsection.products.where(ean: product[:ean]).count > 0
+    puts "#{product[:title]}: #{product[:title]} found in database"
+    next
+   end 
+   excluded_keys_for_product = [:ingredients, :nutritional_values, :weight, :pricing, :ingredient_types, :energy_values, :nutrition_types]
 
-  #  p = subsection.products.create(product.select { |k, v| !excluded_keys_for_product.include?(k) })
+   p = subsection.products.create(product.select { |k, v| !excluded_keys_for_product.include?(k) })
 
-  #  # => Weight + Pricing
-  #  Weight.create!(product[:weight].merge(product_id: p.id)) unless product[:weight].empty?
-  #  Pricing.create!(product[:pricing].merge(product_id: p.id, extracted_at: Time.now))
+   # => Weight + Pricing
+   Weight.create!(product[:weight].merge(product_id: p.id)) unless product[:weight].empty?
+   Pricing.create!(product[:pricing].merge(product_id: p.id, extracted_at: Time.now))
 
-  #  # => NutritionalValue + EnergyValue
-  #  nutritional_value = NutritionalValue.create!(product[:nutritional_values].merge(product_id: p.id))
+   # => NutritionalValue + EnergyValue
+   nutritional_value = NutritionalValue.create!(product[:nutritional_values].merge(product_id: p.id))
 
-  #  product[:energy_values].each   { |ev| EnergyValue.create!(ev.merge(nutritional_value_id:   nutritional_value.id)) }
-  #  product[:nutrition_types].each { |nt| NutritionType.create!(nt.merge(nutritional_value_id: nutritional_value.id)) }
+   product[:energy_values].each   { |ev| EnergyValue.create!(ev.merge(nutritional_value_id:   nutritional_value.id)) }
+   product[:nutrition_types].each { |nt| NutritionType.create!(nt.merge(nutritional_value_id: nutritional_value.id)) }
 
-  #  # => Ingredient + IngredientType
-  #  ingredient = Ingredient.create!(product[:ingredients].merge(product_id: p.id))
+   # => Ingredient + IngredientType
+   ingredient = Ingredient.create!(product[:ingredients].merge(product_id: p.id))
 
-  #  product[:ingredient_types].each { |it| IngredientType.create!(it.merge(ingredient_id: ingredient.id)) }
-  # end
-
-  # puts "\t\t\t#{products.size} products inserted in subsection #{subsection.name}"
+   product[:ingredient_types].each { |it| IngredientType.create!(it.merge(ingredient_id: ingredient.id)) }
+  end
+  puts "\t\t\t#{products.size} products inserted in subsection #{subsection.name}"
 end
 
 def picard_get_product(product_page, page_url, product_image)
@@ -100,6 +103,7 @@ def picard_get_product(product_page, page_url, product_image)
     product[:url]               = page_url
     product[:picture]           = product_image
     # product[:description]       =  description ? description.gsub('.', ". ").squish : nil 
+    product[:ean]               = product_page.css('.ref .ref span').text.squish
     ingredients                 = product_page.css(".suggestion_utilisation p:nth-child(3)")
 
     #########
@@ -130,10 +134,10 @@ def picard_get_product(product_page, page_url, product_image)
     ingredients_type =  product_page.css(".analyse_nutritionnelle+ .border").text.squish
     if ingredients_type.include?("Les allergenes")
 
-      product[:ingredient_types] = { name: "allergenes", 
-                                     info: ingredients_type.gsub(/Les allergenes Produit élaboré dans un atelier qui utilise[\s:]+/, "")
-                                  }
-      puts product[:ingredient_types]
+      product[:ingredient_types] = [{ 
+        name: "allergenes", 
+        info: ingredients_type.gsub(/Les allergenes Produit élaboré dans un atelier qui utilise[\s:]+/, "")
+      }]
     end
 
     #####################
@@ -167,6 +171,7 @@ def picard_get_product(product_page, page_url, product_image)
     product[:nutrition_types] = []
     if (nutritional_values = product_page.css(".analyse_nutritionnelle tr")[2..-1])
       nutritional_values.each do |nutritional_value|
+        begin
         row_value = nutritional_value.css('td')
         unit_value = row_value[1].text.squish.gsub(',', '.').scan(/([\d\.\s]+)([mgµ])+/).first
         product[:nutrition_types] << {
@@ -174,12 +179,11 @@ def picard_get_product(product_page, page_url, product_image)
             weight: unit_value ? unit_value[0] : nil,
             unit:   unit_value ? unit_value[1] : nil
         }
+        rescue
+          puts "=========>    " + product[:url]
+        end
       end
     end
-
-    p  product[:nutrition_types]
-    puts product[:url]
-    return 0
 
     product
 end
